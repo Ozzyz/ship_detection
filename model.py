@@ -30,21 +30,21 @@ def hourglass_cnn(input_dim=(512, 512, 1)):
     conv2 = Conv2D(filters=64, kernel_size=3)(pool1)
     pool2 = MaxPooling2D(pool_size=(2,2))(conv2)
 
-    conv3 = Conv2D(filters=128, kernel_size=3)(pool2)
-    pool3 = MaxPooling2D(pool_size=(2,2))(conv3)
+    #conv3 = Conv2D(filters=128, kernel_size=3)(pool2)
+    #pool3 = MaxPooling2D(pool_size=(2,2))(conv3)
 
-    conv4 = Conv2D(filters=256, kernel_size=3)(pool3)
-    pool4 = MaxPooling2D(pool_size=(2,2))(conv4)
+   # conv4 = Conv2D(filters=256, kernel_size=3)(pool3)
+   # pool4 = MaxPooling2D(pool_size=(2,2))(conv4)
 
-    conv5 = Conv2D(filters=512, kernel_size=3)(pool4)
+   # conv5 = Conv2D(filters=512, kernel_size=3)(pool4)
 
-    deconv1 = Conv2DTranspose(filters=512, kernel_size=3)(conv5)
+   # deconv1 = Conv2DTranspose(filters=512, kernel_size=3)(conv5)
 
-    deconv2 = Conv2DTranspose(filters=256, kernel_size=3)(deconv1)
+   # deconv2 = Conv2DTranspose(filters=256, kernel_size=3)(deconv1)
 
-    deconv3 = Conv2DTranspose(filters=128, kernel_size=3)(deconv2)
+    #deconv3 = Conv2DTranspose(filters=128, kernel_size=3)(pool3)
 
-    deconv4 = Conv2DTranspose(filters=64, kernel_size=3)(deconv3)
+    deconv4 = Conv2DTranspose(filters=64, kernel_size=3)(pool2)
 
     deconv5 = Conv2DTranspose(filters=32, kernel_size=3)(deconv4)
     flattened = Flatten()(deconv5)
