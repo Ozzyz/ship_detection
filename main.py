@@ -24,7 +24,7 @@ y_test = utils.to_categorical(y_test, num_classes)
 
 
 #model = basic_cnn(input_dim=(28, 28, 1))
-model = hourglass_cnn()
+model = hourglass_cnn(input_dim=(28, 28, 1))
 
 print(model.summary())
 model.fit(x_train, y_train,
