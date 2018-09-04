@@ -1,5 +1,5 @@
 
-from model import basic_cnn
+from model import basic_cnn, hourglass_cnn
 from keras.datasets import mnist
 from keras import utils
 
@@ -23,7 +23,9 @@ y_train = utils.to_categorical(y_train, num_classes)
 y_test = utils.to_categorical(y_test, num_classes)
 
 
-model = basic_cnn(input_dim=(28, 28, 1))
+#model = basic_cnn(input_dim=(28, 28, 1))
+model = hourglass_cnn()
 
+print(model.summary())
 model.fit(x_train, y_train,
           validation_data=(x_test, y_test))
