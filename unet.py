@@ -9,7 +9,7 @@ import numpy as np
 
 
 
-def load_data_generator(train_folderpath, mask_folderpath, img_size = (768, 768), mask_size=(768,768)):
+def load_data_generator(train_folderpath, mask_folderpath, img_size = (768, 768), mask_size=(768,768), batch_size=32):
 	"""
 	Returns a data generator with masks and training data specified by the directory paths given.
 	"""
@@ -24,9 +24,9 @@ def load_data_generator(train_folderpath, mask_folderpath, img_size = (768, 768)
 	seed = 42
 	
 	image_generator = image_datagen.flow_from_directory(train_folderpath, class_mode=None,
-		target_size = img_size, seed=seed, color_mode = 'rgb')
+		target_size = img_size, seed=seed, color_mode = 'rgb', batch_size=batch_size)
 	mask_generator = mask_datagen.flow_from_directory(mask_folderpath, class_mode=None, 
-		target_size = mask_size,seed=seed, color_mode='grayscale')
+		target_size = mask_size,seed=seed, color_mode='grayscale', batch_size=batch_size)
 
 	return zip(image_generator, mask_generator)
 
@@ -38,9 +38,9 @@ def run():
 	model = unet(input_dim)
 	print(model.summary())
 	print("Creating training generator...")
-	train_generator = load_data_generator('data/images', 'data/masks')
+	train_generator = load_data_generator('data/images', 'data/masks', batch_size=2)
 	print("Fitting model to generator")
-	model.fit_generator(train_generator, steps_per_epoch=500, epochs=50)
-
+	model.fit_generator(train_generator, steps_per_epoch=10, epochs=50)
+	model.save('trained_model.h5')
 if __name__ == '__main__':
 	run()
