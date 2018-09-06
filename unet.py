@@ -7,49 +7,40 @@ import os
 from skimage.data import imread
 import numpy as np
 
-#train = os.listdir('data/train_small')
-#test = os.listdir('data/test_small')
-#train_masks = os.listdir('data/train_masks')
-#test_masks = os.listdir('data/test_masks')
 
-def load_data(filepath, num_channels):
+
+def load_data_generator(train_folderpath, mask_folderpath, img_size = (768, 768), mask_size=(768,768)):
 	"""
-	Returns all images in the specified folder filepath
-	:param filepath: Name of folder where images are stored
-	:return: An array of images
+	Returns a data generator with masks and training data specified by the directory paths given.
 	"""
-	data = np.empty((1337, 768, 768, num_channels), dtype=np.uint8)
+	data_gen_args = dict(
+                     rotation_range=90.,
+                     width_shift_range=0.1,
+                     height_shift_range=0.1,
+						zoom_range=0.2)
+	image_datagen = ImageDataGenerator(**data_gen_args)
+	mask_datagen = ImageDataGenerator(**data_gen_args)
 
-	i = 0
-	for item in os.listdir(filepath):
-		if os.path.isfile(filepath + item):
-			data[i] = imread(filepath + item).reshape(768, 768, num_channels)
-	i += 1
+	seed = 42
+	
+	image_generator = image_datagen.flow_from_directory(train_folderpath, class_mode=None,
+		target_size = img_size, seed=seed, color_mode = 'rgb')
+	mask_generator = mask_datagen.flow_from_directory(mask_folderpath, class_mode=None, 
+		target_size = mask_size,seed=seed, color_mode='grayscale')
 
-	return data
+	return zip(image_generator, mask_generator)
+
+
 
 def run():
-	train = load_data('data/train_small/', 3)
-	test = load_data('data/test_small/', 3)
-	train_masks = load_data('data/train_masks/', 1)
-	test_masks = load_data('data/test_masks/', 1)
-	print('images loaded')
+	input_dim = (768, 768, 3)
+	print("Instantiating model...")
+	model = unet(input_dim)
+	print(model.summary())
+	print("Creating training generator...")
+	train_generator = load_data_generator('data/images', 'data/masks')
+	print("Fitting model to generator")
+	model.fit_generator(train_generator, steps_per_epoch=500, epochs=50)
 
-	datagen = ImageDataGenerator(
-		featurewise_center=True,
-		featurewise_std_normalization=True
-	)
-
-	datagen.fit(train)
-
-	#print(train.shape)
-
-	model = unet(input_dim=(768, 768, 3))
-	print('model ready')
-
-	model.fit_generator(datagen.flow(train, train_masks, batch_size=32), steps_per_epoch=len(train), epochs=10)
-	#model.fit(train, train_masks, validation_data=(test, test_masks))
-
-#run()
-
-model = unet(input_dim=(768, 768, 3))
+if __name__ == '__main__':
+	run()

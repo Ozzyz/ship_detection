@@ -6,11 +6,8 @@ from skimage.io import imsave
 import matplotlib.pyplot as plt
 import warnings
 
-warnings.simplefilter("ignore")
+#warnings.simplefilter("ignore")
 
-masks = pd.read_csv('data/test_ship_small.csv')
-train = os.listdir('data/train_small')
-test = os.listdir('data/test_small')
 
 # ref: https://www.kaggle.com/paulorzp/run-length-encode-and-decode
 def rle_decode(mask_rle, shape=(768, 768)):
@@ -28,29 +25,42 @@ def rle_decode(mask_rle, shape=(768, 768)):
 		img[lo:hi] = 1
 	return img.reshape(shape).T  # Needed to align to RLE direction
 
-all_all_masks = {}
 
-counter = 0
+def write_masks(masks_filepath, data_folder, dst_folder):
+	masks = pd.read_csv(masks_filepath)
+	images = os.listdir(data_folder)
+	all_all_masks = {}
 
-for imageID in test:
-	#ImageId = '00abc623a.jpg'
-	img = imread('data/test_small/' + imageID)
-	img_masks = masks.loc[masks['ImageId'] == imageID, 'EncodedPixels'].tolist()
+	counter = 0
 
-	# Take the individual ship masks and create a single mask array for all ships
-	all_masks = np.zeros((768, 768))
-	for mask in img_masks:
-		if mask is not np.nan:
-			counter += 1
+	for imageID in images:
+		img_masks = masks.loc[masks['ImageId'] == imageID, 'EncodedPixels'].tolist()
+
+		# Take the individual ship masks and create a single mask array for all ships
+		all_masks = np.zeros((768, 768))
+		for mask in img_masks:
+			# Image has no masks - i.e no ships
+			if mask is np.nan:
+				counter += 1
+				continue
 			all_masks += rle_decode(mask)
 
-	all_all_masks[imageID] = all_masks
-	imsave('data/test_masks/' + imageID, all_masks)
+		all_all_masks[imageID] = all_masks
+		imsave(dst_folder + imageID, all_masks)
 
-counter = 1337 - counter
+	num_boats = 1337 - counter
 
-print(counter)
+	print(f"Number of images containing boats: {num_boats}")
+	print(f"Number of images not containing boats: {counter}")
 
+def gen_all_masks():
+	# NOTE: Assumes that masks folders exists
+	write_masks('../small_test_segmentations.csv', '../test_small', '../test_masks_small/')
+	write_masks('../small_train_segmentations.csv', '../train_small', '../train_masks_small/')
+
+
+if __name__ == '__main__':
+	gen_all_masks()
 """
 img = imread('data/train_small/00f34434e.jpg')
 
