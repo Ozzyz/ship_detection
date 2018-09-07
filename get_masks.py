@@ -55,9 +55,9 @@ def write_masks(masks_filepath, data_folder, dst_folder):
 
 def gen_all_masks():
 	# NOTE: Assumes that masks folders exists
-	write_masks('../small_test_segmentations.csv', '../test_small', '../test_masks_small/')
-	write_masks('../small_train_segmentations.csv', '../train_small', '../train_masks_small/')
-
+	#write_masks('../small_test_segmentations.csv', '../test_small', '../test_masks_small/')
+	#write_masks('../small_train_segmentations.csv', '../train_small', '../train_masks_small/')
+	#write_masks('small_validation_set.csv', 'val_small/', 'val_masks_small/')
 
 if __name__ == '__main__':
 	gen_all_masks()
