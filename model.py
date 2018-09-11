@@ -4,7 +4,7 @@ from keras.layers.merge import concatenate
 from keras.models import Model
 from keras.optimizers import Adam
 from keras import backend as K
-
+from loss_funcs import dice_coef, true_positive_rate, dice_p_bce
 
 def basic_cnn(input_dim=(512, 512, 3)):
 	inputs = Input(shape=input_dim)
@@ -114,12 +114,5 @@ def unet(input_dim = (512,512,3)):
 
 	model = Model(inputs=inputs, outputs=segmap)
 	print(model.summary())
-	model.compile(optimizer = Adam(lr = 0.0001), loss = 'binary_crossentropy', metrics = ['accuracy'])
+	model.compile(optimizer = Adam(1e-4, decay=1e-6), loss = dice_p_bce, metrics = ['accuracy', dice_coef, true_positive_rate])
 	return model
-
-
-
-
-
-
-
