@@ -10,7 +10,7 @@ from skimage.data import imread
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from loss_funcs import dice_coef, dice_p_bce, true_positive_rate
+from loss_funcs import dice_coef, dice_p_bce, true_positive_rate, focal_loss
 
 def load_data_generator(train_folderpath, mask_folderpath, img_size = (768, 768), mask_size=(768,768), batch_size=32):
     """
@@ -56,26 +56,27 @@ def apply_pretrained_model(filepath, data_folder, mask_folder):
         Loads a pretrained keras model and applies it to a selection of the test images, creating a 
         submission csv. 
     """
-    model = load_model(filepath, custom_objects={'dice_p_bce': dice_p_bce, 'true_positive_rate': true_positive_rate, 'dice_coef': dice_coef})
-    NUM_IMAGES = 7
+    model = load_model(filepath, custom_objects={'dice_p_bce': dice_p_bce, 'true_positive_rate': true_positive_rate, 'dice_coef': dice_coef, 'focal_loss' : focal_loss})
+    NUM_IMAGES = 3
     
     image_names = random.sample(os.listdir(data_folder), NUM_IMAGES)
-    ground_truths = random.sample(os.listdir(mask_folder), NUM_IMAGES)
 
     _, axis = plt.subplots(NUM_IMAGES, 3)
 
-    for (ax1, ax2, ax3), c_img_name, mask_img_name in zip(axis, image_names, ground_truths):
+    for (ax1, ax2, ax3), c_img_name in zip(axis, image_names):
         print("C_img,", c_img_name)
-        print("Ground truth:", mask_img_name)
         c_path = os.path.join(data_folder, c_img_name)
         c_img = imread(c_path)
-        first_img = np.expand_dims(c_img, 0)
+        first_img = np.expand_dims(c_img, 0)/255
+        print("Shape of normalized image:", first_img.shape)
         first_seg = model.predict(first_img)
-        print(c_img.shape, c_img.min(), c_img.max(), c_img.mean())
-        print(first_seg.shape, first_seg.min(), first_seg.max(), first_seg.mean())
-        mask_path = os.path.join(mask_folder, mask_img_name)
+        print("Original image shape, min, max, mean: ", first_img.shape, first_img.min(), first_img.max(), first_img.mean())
+        print("Predicted image shape, min, max, mean: ", first_seg.shape, first_seg.min(), first_seg.max(), first_seg.mean())
+        mask_path = os.path.join(mask_folder, c_img_name)
         ground_truth = imread(mask_path)
         ground_truth =  np.expand_dims(ground_truth, 0)
+        first_seg = (first_seg > 0).astype(float)
+        
         ax1.imshow(first_img[0])
         ax1.set_title('Image')
         ax2.imshow(first_seg[0, :, :, 0], vmin = 0, vmax = 1)
@@ -85,5 +86,10 @@ def apply_pretrained_model(filepath, data_folder, mask_folder):
 
     plt.show()
 if __name__ == '__main__':
-    run()
-    #apply_pretrained_model('trained_model.h5', 'data/test_images/test_small', 'data/test_masks/test_masks_small')
+    import argparse
+    parser = argparse.ArgumentParser(description="Train or apply pretrained model to satellite dataset")
+    parser.add_argument("model", help="Path to pretrained h5 model")
+    args = parser.parse_args()
+
+    #run()
+    apply_pretrained_model(args.model, 'data/test_images/test_small', 'data/test_masks/test_masks_small')
