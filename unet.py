@@ -43,10 +43,10 @@ def run():
     model = unet(input_dim)
     print(model.summary())
     print("Creating training generator...")
-    val_generator = load_data_generator('/data/val_images', 'data/val_masks', batch_size=2)
+    val_generator = load_data_generator('data/val_images', 'data/val_masks', batch_size=2)
     train_generator = load_data_generator('data/images', 'data/masks', batch_size=2)
     print("Fitting model to generator")
-    model.fit_generator(train_generator, steps_per_epoch=250, epochs=20, validation_data = val_generator, validation_steps=100)
+    model.fit_generator(train_generator, steps_per_epoch=250, epochs=2, validation_data = val_generator, validation_steps=100)
     timestr = time.strftime("%Y%m%d-%H%M%S")
     model.save("trained_model_{0}.h5".format(timestr))
 
@@ -85,5 +85,5 @@ def apply_pretrained_model(filepath, data_folder, mask_folder):
 
     plt.show()
 if __name__ == '__main__':
-    #run()
-    apply_pretrained_model('trained_model.h5', 'data/test_images/test_small', 'data/test_masks/test_masks_small')
+    run()
+    #apply_pretrained_model('trained_model.h5', 'data/test_images/test_small', 'data/test_masks/test_masks_small')
