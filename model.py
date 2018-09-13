@@ -9,9 +9,9 @@ from loss_funcs import dice_coef, true_positive_rate, dice_p_bce
 def basic_cnn(input_dim=(512, 512, 3)):
 	inputs = Input(shape=input_dim)
 
-	conv1 = Conv2D(filters=64, kernel_size=3)(inputs)
+	conv1 = Conv2D(filters=64, kernel_size=3, activation='relu', padding='same')(inputs)
 	pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-	conv2 = Conv2D(filters=32, kernel_size=3)(pool1)
+	conv2 = Conv2D(filters=32, kernel_size=3, activation='relu', padding='same')(pool1)
 	pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
 	flat = Flatten()(pool2)
 	fully_connected = Dense(256, activation='relu')(flat)
@@ -120,14 +120,14 @@ def unet(input_dim = (512,512,3)):
 def ship_cnn(input_dim=(512, 512, 3)):
 	inputs = Input(shape=input_dim)
 
-	conv1 = Conv2D(filters=64, kernel_size=3, padding='same', kernel_initializer='he_normal')(inputs)
+	conv1 = Conv2D(filters=64, kernel_size=3, activation='relu', padding='same', kernel_initializer='he_normal')(inputs)
 	pool1 = MaxPooling2D(pool_size=(2, 2), padding='same')(conv1)
 
-	conv2 = Conv2D(filters=128, kernel_size=3, padding='same', kernel_initializer='he_normal')(pool1)
+	conv2 = Conv2D(filters=128, kernel_size=3, activation='relu', padding='same', kernel_initializer='he_normal')(pool1)
 	drop2 = Dropout(0.5)(conv2)
 	pool2 = MaxPooling2D(pool_size=(2, 2), padding='same')(drop2)
 
-	conv3 = Conv2D(filters=256, kernel_size=3, padding='same', kernel_initializer='he_normal')(pool2)
+	conv3 = Conv2D(filters=256, kernel_size=3, activation='relu', padding='same', kernel_initializer='he_normal')(pool2)
 	drop3 = Dropout(0.5)(conv3)
 
 	# Up-L1 - merge upsampled L2 with output from L1

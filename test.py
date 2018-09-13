@@ -38,7 +38,7 @@ def load_data_generator(train_folderpath, mask_folderpath, img_size=(768, 768), 
 def run():
 	input_dim = (768, 768, 3)
 	print("Instantiating model...")
-	model = ship_cnn(input_dim)
+	model = basic_cnn(input_dim)
 	print(model.summary())
 	print("Creating training generator...")
 	#val_generator = load_data_generator('/data/val_images', 'data/val_masks', batch_size=2)
