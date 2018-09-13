@@ -1,5 +1,5 @@
 import keras
-from keras.layers import Input, Conv2D, Dense, MaxPooling2D, Flatten, Conv2DTranspose
+from keras.layers import Input, Conv2D, Dense, MaxPooling2D, Flatten, Conv2DTranspose, merge, Dropout, UpSampling2D
 from keras.layers.merge import concatenate
 from keras.models import Model
 from keras.optimizers import Adam
@@ -115,4 +115,90 @@ def unet(input_dim = (512,512,3)):
 	model = Model(inputs=inputs, outputs=segmap)
 	print(model.summary())
 	model.compile(optimizer = Adam(1e-4, decay=1e-6), loss = dice_p_bce, metrics = ['accuracy', dice_coef, true_positive_rate])
+	return model
+
+def ship_cnn(input_dim=(512, 512, 3)):
+	inputs = Input(shape=input_dim)
+
+	conv1 = Conv2D(filters=64, kernel_size=3, padding='same', kernel_initializer='he_normal')(inputs)
+	pool1 = MaxPooling2D(pool_size=(2, 2), padding='same')(conv1)
+
+	conv2 = Conv2D(filters=128, kernel_size=3, padding='same', kernel_initializer='he_normal')(pool1)
+	drop2 = Dropout(0.5)(conv2)
+	pool2 = MaxPooling2D(pool_size=(2, 2), padding='same')(drop2)
+
+	conv3 = Conv2D(filters=256, kernel_size=3, padding='same', kernel_initializer='he_normal')(pool2)
+	drop3 = Dropout(0.5)(conv3)
+
+	# Up-L1 - merge upsampled L2 with output from L1
+	#upsampled_conv1 = Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same')(conv3)
+	up1 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop3))
+	merge1 = merge([drop2, up1], mode='concat', concat_axis=3)
+	conv4 = Conv2D(filters = 128, kernel_size=3, padding='same')(merge1)
+
+	# Up-L1 - merge upsampled L2 with output from L1
+	#upsampled_conv2 = Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same')
+	up2 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv4))
+	merge2 = merge([conv1, up2], mode='concat', concat_axis=3)
+	conv5 = Conv2D(filters = 64, kernel_size=3, padding='same', kernel_initializer='he_normal')(merge2)
+
+	conv6 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
+	# Final layer - makes 768x768x1 image
+	segmap = Conv2D(filters = 1, kernel_size = 1, activation = 'sigmoid')(conv6)
+
+	model = Model(inputs=inputs, outputs=segmap)
+	print(model.summary())
+	model.compile(optimizer = Adam(lr = 0.0001), loss = 'binary_crossentropy', metrics = ['accuracy'])
+	return model
+
+
+def test_unet(input_dim=(768, 768, 3)):
+	inputs = Input(input_dim)
+	conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(inputs)
+	conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv1)
+	pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
+	conv2 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool1)
+	conv2 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv2)
+	pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
+	conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool2)
+	conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv3)
+	pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
+	conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool3)
+	conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv4)
+	drop4 = Dropout(0.5)(conv4)
+	pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+
+	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
+	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
+	drop5 = Dropout(0.5)(conv5)
+
+	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop5))
+	merge6 = merge([drop4, up6], mode='concat', concat_axis=3)
+	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
+	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
+
+	up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
+	merge7 = merge([conv3, up7], mode='concat', concat_axis=3)
+	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
+	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
+
+	up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
+	merge8 = merge([conv2, up8], mode='concat', concat_axis=3)
+	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
+	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
+
+	up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
+	merge9 = merge([conv1, up9], mode='concat', concat_axis=3)
+	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
+	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
+	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
+	conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
+
+	model = Model(input=inputs, output=conv10)
+
+	model.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy', metrics=['accuracy'])
+
 	return model
