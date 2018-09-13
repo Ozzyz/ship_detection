@@ -1,5 +1,5 @@
 import keras
-from keras.layers import Input, Conv2D, Dense, MaxPooling2D, Flatten, Conv2DTranspose, merge, Dropout, UpSampling2D
+from keras.layers import Input, Conv2D, Dense, MaxPooling2D, Flatten, Conv2DTranspose, Dropout, UpSampling2D
 from keras.layers.merge import concatenate
 from keras.models import Model
 from keras.optimizers import Adam
@@ -133,13 +133,13 @@ def ship_cnn(input_dim=(512, 512, 3)):
 	# Up-L1 - merge upsampled L2 with output from L1
 	#upsampled_conv1 = Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same')(conv3)
 	up1 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop3))
-	merge1 = merge([drop2, up1], mode='concat', concat_axis=3)
+	merge1 = concatenate([drop2, up1], axis=3)
 	conv4 = Conv2D(filters = 128, kernel_size=3, padding='same')(merge1)
 
 	# Up-L1 - merge upsampled L2 with output from L1
 	#upsampled_conv2 = Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same')
 	up2 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv4))
-	merge2 = merge([conv1, up2], mode='concat', concat_axis=3)
+	merge2 = concatenate([conv1, up2], axis=3)
 	conv5 = Conv2D(filters = 64, kernel_size=3, padding='same', kernel_initializer='he_normal')(merge2)
 
 	conv6 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
@@ -176,22 +176,22 @@ def test_unet(input_dim=(768, 768, 3)):
 	drop5 = Dropout(0.5)(conv5)
 
 	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop5))
-	merge6 = merge([drop4, up6], mode='concat', concat_axis=3)
+	merge6 = concatenate([drop4, up6], axis=3)
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
 
 	up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
-	merge7 = merge([conv3, up7], mode='concat', concat_axis=3)
+	merge7 = concatenate([conv3, up7], axis=3)
 	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
 	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
 
 	up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
-	merge8 = merge([conv2, up8], mode='concat', concat_axis=3)
+	merge8 = concatenate([conv2, up8], axis=3)
 	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
 	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
 
 	up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
-	merge9 = merge([conv1, up9], mode='concat', concat_axis=3)
+	merge9 = concatenate([conv1, up9], axis=3)
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)

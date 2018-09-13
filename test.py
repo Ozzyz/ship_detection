@@ -38,7 +38,7 @@ def load_data_generator(train_folderpath, mask_folderpath, img_size=(768, 768), 
 def run():
 	input_dim = (768, 768, 3)
 	print("Instantiating model...")
-	model = test_unet(input_dim)
+	model = ship_cnn(input_dim)
 	print(model.summary())
 	print("Creating training generator...")
 	#val_generator = load_data_generator('/data/val_images', 'data/val_masks', batch_size=2)
@@ -57,7 +57,7 @@ def apply_pretrained_model(filepath, data_folder, mask_folder):
 
 	#image_names = os.listdir(data_folder)
 	image_names = ["00a52cd2a.jpg", "00abc623a.jpg"]
-	_, axis = plt.subplots(2, 2)
+	_, axis = plt.subplots(1, 2)
 
 	for (ax1, ax2), c_img_name in zip(axis, image_names):
 		c_path = os.path.join(data_folder, c_img_name)
@@ -73,6 +73,6 @@ def apply_pretrained_model(filepath, data_folder, mask_folder):
 
 
 if __name__ == '__main__':
-	#run()
-	apply_pretrained_model('test_model.h5', 'data/trainX/train_small', 'data/trainY/train_masks')
+	run()
+	#apply_pretrained_model('test_model.h5', 'data/trainX/train_small', 'data/trainY/train_masks')
 
