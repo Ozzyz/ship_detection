@@ -23,3 +23,6 @@ def focal_loss(y_true, y_pred):#with tensorflow
     pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
     pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
     return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1))-K.sum((1-alpha) * K.pow( pt_0, gamma) * K.log(1. - pt_0))
+
+def combined_dice_bce(in_gt, in_pred):
+    return dice_p_bce(in_gt, in_pred) + (1 - dice_coef(in_gt, in_pred))
