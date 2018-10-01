@@ -1,12 +1,14 @@
 from skimage.data import imread
 from skimage.io import imshow, show
-import os 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+from imgaug import augmenters as iaa
 
-def data_generator(image_folder, mask_folder, batch_size = 32, transform_params = None, rescale=1./255):
+
+def data_generator(image_folder, mask_folder, batch_size=32, transform_params=None, rescale=1./255):
     # Assumes images and masks have same filename but are located in different folders
-    image_names = os.listdir(image_folder) 
+    image_names = os.listdir(image_folder)
     while True:
         for idx in range(0, len(image_names), batch_size):
             batch_x = []
@@ -18,19 +20,29 @@ def data_generator(image_folder, mask_folder, batch_size = 32, transform_params 
             for name in image_batch:
                 img_filepath = os.path.join(image_folder, name)
                 mask_filepath = os.path.join(mask_folder, name)
+
                 img = imread(img_filepath)*rescale
-                augmented_image = augment_image(img)
-
-                mask = imread(mask_filepath)
-                augmented_mask = augment_image(mask)*rescale
-                batch_x.append(augmented_image)
-                batch_y.append(augmented_mask)
-            yield np.array(batch_x), np.array(batch_y)
+                mask = imread(mask_filepath)*rescale
+                batch_x.append(img)
+                batch_y.append(mask)
+            aug_batch_x, aug_batch_y = augment_data(batch_x, batch_y)
+            yield np.array(aug_batch_x), np.array(aug_batch_y)
 
 
-def augment_image(image):
-    # TODO: Augment image
-    return image 
+def augment_data(images, masks):
+
+    seq = iaa.Sequential([
+        iaa.Fliplr(0.5),
+        iaa.GaussianBlur(sigma=(0, 3.0)),
+        iaa.Affine(
+            scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+            translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+            rotate=(-25, 25),
+            shear=(-8, 8)
+        )
+    ], random_order=True)
+    seq_imgs = seq.to_deterministic()
+    return seq_imgs.augment_images(images), seq_imgs.augment_images(masks)
 
 
 if __name__ == '__main__':
